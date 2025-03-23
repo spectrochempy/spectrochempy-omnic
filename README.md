@@ -1,2 +1,2 @@
 # spectrochempy-omnic
- SpctroChemPy Omnic file reader
+ SpectroChemPy Omnic file reader
