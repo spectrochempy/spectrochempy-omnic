@@ -1,6 +1,4 @@
-# This workflow builds and publishes SpectrochemPy packages to:
-# - PyPI (Python Package Index)
-# - Anaconda Cloud
+# This workflow builds and publishes spectrochempy_omnic packages to PyPI (Python Package Index)
 # It runs after successful completion of the test workflow
 
 name: Build and publish packages 📦
@@ -24,7 +22,7 @@ concurrency:
 
 jobs:
   # Build and publish to PyPI
-  # ---------------------------------
+  # -------------------------
   build-and-publish_pypi:
     name: Build and publish distribution to PyPI
     runs-on: ubuntu-latest
@@ -44,7 +42,7 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: "3.10"
 
       # Step 3: Install pypa/build
       - name: Install pypa/build
@@ -66,17 +64,9 @@ jobs:
             dist/*.tar.gz
           retention-days: 5
 
-      # Step 6: Publish package to Test PyPI
-      - name: Publish package to Test PyPI
-        if: (github.event_name == 'push' && github.repository == 'spectrochempy/spectrochempy_omnic')
-        uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          password: ${{ secrets.TEST_PYPI_API_TOKEN }}
-          repository-url: https://test.pypi.org/legacy/
-
-      # Step 7: Publish package to PyPI
+      # Step 6: Publish package to PyPI
       - name: Publish package to PyPI
-        if: (github.event_name == 'release' && github.event.action == 'published' && github.repository == 'spectrochempy/spectrochempy_omnic')
+        if: (github.event_name == 'release' && github.event.action == 'published' && github.repository == 'spectrochempy/spectrochempy-omnic')
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           password: ${{ secrets.PYPI_API_TOKEN }}
