@@ -38,12 +38,22 @@ jobs:
           git config user.email "github-actions@users.noreply.github.com"
           git config user.name "GitHub Actions"
 
-      # - name: Commit tracked files
-      #   id: make-commit
-      #   run: |
-      #     git add -A
-      #     git commit --no-verify --message "Prepare release ${{ github.event.inputs.versionString }}"
-      #     echo "commit=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
+      - name: Generate version file
+        run: |
+          # Determine the package directory (adjust if needed)
+          PACKAGE_DIR="spectrochempy_omnic"
+
+          # Create __version__.py file with setuptools_scm
+          python3 -c "from setuptools_scm import get_version; version='${{ github.event.inputs.versionString }}'; open('${PACKAGE_DIR}/__version__.py', 'w').write(f'__version__ = \"{version}\"\n')"
+
+          echo "Generated version file with version ${{ github.event.inputs.versionString }}"
+
+      - name: Commit tracked files
+        id: make-commit
+        run: |
+          git add -A
+          git commit --no-verify --message "Prepare release ${{ github.event.inputs.versionString }}"
+          echo "commit=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
 
       - name: Push new branch
         run: git push origin release/${{ github.event.inputs.versionString }}
