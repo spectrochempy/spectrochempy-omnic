@@ -36,6 +36,7 @@ requires-python = ">=3.10"
 build = ["setuptools", "setuptools_scm", "toml", "jinja2", "anaconda-client"]
 dev = ["spectrochempy[dev]"]
 test = [
+  "requests",
   "pytest",
   "pytest-doctestplus",
   "pytest-ruff",
