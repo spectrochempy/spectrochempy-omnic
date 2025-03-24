@@ -1,0 +1,82 @@
+# This workflow builds and publishes SpectrochemPy packages to:
+# - PyPI (Python Package Index)
+# - Anaconda Cloud
+# It runs after successful completion of the test workflow
+
+name: Build and publish packages 📦
+
+on:
+  pull_request:
+
+  release:
+    types: [published]
+
+  workflow_dispatch:  # Allow manual trigger
+
+permissions:
+  contents: read
+  packages: write
+  id-token: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # Build and publish to PyPI
+  # ---------------------------------
+  build-and-publish_pypi:
+    name: Build and publish distribution to PyPI
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        shell: bash -l {0}
+
+    steps:
+      # Step 1: Checkout code
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # Step 2: Setup Python
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      # Step 3: Install pypa/build
+      - name: Install pypa/build
+        run: |
+          python -m pip install build --user
+
+      # Step 4: Build a binary wheel and a source tarball
+      - name: Build a binary wheel and a source tarball
+        run: |
+          python -m build --sdist --wheel --outdir dist/ .
+
+      # Step 5: Upload PyPI build artifacts
+      - name: Upload PyPI build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: pypi-package
+          path: |
+            dist/*.whl
+            dist/*.tar.gz
+          retention-days: 5
+
+      # Step 6: Publish package to Test PyPI
+      - name: Publish package to Test PyPI
+        if: (github.event_name == 'push' && github.repository == 'spectrochempy/spectrochempy_omnic')
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          password: ${{ secrets.TEST_PYPI_API_TOKEN }}
+          repository-url: https://test.pypi.org/legacy/
+
+      # Step 7: Publish package to PyPI
+      - name: Publish package to PyPI
+        if: (github.event_name == 'release' && github.event.action == 'published' && github.repository == 'spectrochempy/spectrochempy_omnic')
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          password: ${{ secrets.PYPI_API_TOKEN }}

@@ -1,0 +1,117 @@
+# This workflow runs tests for SpectrochemPy across different operating systems and Python versions
+# It ensures the package works correctly in various environments
+
+name: Tests
+
+# Define when this workflow should run:
+# - On push to main branches
+# - Weekly on Sunday at midnight
+# - On pull requests
+# - Manually from GitHub interface
+on:
+  push:
+    branches:
+      - main
+      - develop
+      - feature/*
+
+  schedule:
+    - cron: "0 0 * * 0"  # At 00:00 on Sunday
+
+  pull_request:
+
+  workflow_dispatch:  # Manual trigger
+
+# Prevent multiple simultaneous runs
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read  # Required for actions/checkout
+  id-token: write  # Required for certain authentication scenarios
+  actions: read  # Default permissions for actions
+  checks: write  # Required for reporting test results
+  statuses: write  # Required for updating commit statuses
+
+jobs:
+  test-package:
+
+    name: Test using ${{ matrix.os }} and python ${{ matrix.pythonVersion }}
+
+    runs-on: ${{ matrix.os }}
+
+    defaults:
+      run:
+        shell: bash {0}
+        # do not use -l flag (do not work with macos when bash is se in login mode)
+
+    # Define test matrix - this will run tests in parallel for:
+    # - Different operating systems (Ubuntu, macOS, Windows)
+    # - Different Python versions (3.10, 3.13)
+    strategy:
+      fail-fast: false  # Continue testing even if one combination fails
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        pythonVersion: ["3.10", "3.13"]
+        include:
+          # Full testing on Ubuntu with all Python versions
+          - os: ubuntu-latest
+            pythonVersion: "3.10"
+            full_test: true
+          - os: ubuntu-latest
+            pythonVersion: "3.13"
+            full_test: true
+
+          # Limited testing on Windows/macOS
+          - os: windows-latest
+            pythonVersion: "3.13"
+            full_test: false
+          - os: macos-latest
+            pythonVersion: "3.13"
+            full_test: false
+
+        exclude:
+          # Exclude other combinations
+          - os: macos-latest
+            pythonVersion: "3.10"
+          - os: windows-latest
+            pythonVersion: "3.10"
+
+    steps:
+      # Print debug information about the current run
+      - name: info
+        run: |
+          echo "Event Name: ${{ github.event_name }}"
+          echo "Ref: ${{ github.ref }}"
+          echo "Repository: ${{ github.repository }}"
+          echo "Workflow: ${{ github.workflow }}"
+          echo "pythonVersion: ${{ matrix.pythonVersion }}"
+          echo "os: ${{ matrix.os }}"
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python ${{ matrix.pythonVersion }}
+        id: setup_python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.pythonVersion }}
+          cache: "pip"
+
+      - name: Set UTF-8 encoding for Windows
+        if: matrix.os == 'windows-latest'
+        run: |
+          echo "PYTHONIOENCODING=utf-8" >> $GITHUB_ENV
+          echo "PYTHONUTF8=1" >> $GITHUB_ENV
+
+      - name: Install spectrochempy_omnic
+        run: |
+          pip install --upgrade pip
+          python -m pip install ".[test]"
+
+      - name: Test with coverage
+        run: |
+          pytest tests
