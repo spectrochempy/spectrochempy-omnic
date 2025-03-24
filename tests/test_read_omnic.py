@@ -11,8 +11,7 @@ from pathlib import Path
 from spectrochempy_omnic import OMNICReader, OMNICReaderError
 
 
-DATADIR = Path.home() / ".spectrochempy" / "testdata"
-IRDATA = DATADIR / "irdata"
+IRDATA = Path(__file__).parent / "data"
 
 
 def test_read_omnic():
@@ -30,7 +29,7 @@ def test_read_omnic():
     assert str(nd1) == f"OMNICReader: {nd1.filename.name} {nd1.data.shape}"
 
     # test read_omnic with byte spg content
-    filename_wodger = DATADIR / "wodger.spg"
+    filename_wodger = IRDATA / "wodger.spg"
     with open(filename_wodger, "rb") as fil:
         content = fil.read()
     nd1 = OMNICReader(filename_wodger)

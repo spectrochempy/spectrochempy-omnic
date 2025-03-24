@@ -51,8 +51,25 @@ class OMNICReaderWarning(Warning):
 # Utility functions
 # ======================================================================
 def fromfile(fid, dtype, count):
-    # to replace np.fromfile in case of io.BytesIO object instead of byte
-    # object
+    """
+    Read binary data from a file-like object as a numpy array or scalar.
+
+    This function replaces np.fromfile for io.BytesIO objects.
+
+    Parameters
+    ----------
+    fid : file-like object
+        File-like object to read from.
+    dtype : str
+        Data type to read ('uint8', 'int8', 'uint16', 'int16', 'uint32', 'int32', 'float32', 'char8').
+    count : int
+        Number of elements to read.
+
+    Returns
+    -------
+    numpy.ndarray or scalar
+        The data read from the file.
+    """
     t = {
         "uint8": "B",
         "int8": "b",
@@ -76,12 +93,31 @@ def fromfile(fid, dtype, count):
 
 
 def is_url(strg):
-    # Check if the strg is a URL
+    """
+    Check if a string is a valid URL.
+
+    Parameters
+    ----------
+    strg : str
+        String to check.
+
+    Returns
+    -------
+    bool
+        True if the string is a URL, False otherwise.
+    """
     return isinstance(strg, str) and re.match(r"http[s]?:[\/]{2}", strg) is not None
 
 
 def utcnow():
-    """Return the current time in UTC with a timezone."""
+    """
+    Return the current time in UTC with a timezone.
+
+    Returns
+    -------
+    datetime
+        Current UTC time with timezone information.
+    """
     if sys.version_info[1] < 12:
         return datetime.utcnow().replace(microsecond=0, tzinfo=ZoneInfo("UTC"))
     return datetime.now(UTC).replace(microsecond=0)
@@ -107,24 +143,18 @@ if not logger.handlers:
 
 
 # Convenience methods
-def debug_(msg):
-    """Log a debug message."""
-    logger.debug(msg)
 
 
 def info_(msg):
-    """Log an info message."""
+    """
+    Log an info message.
+
+    Parameters
+    ----------
+    msg : str
+        Message to log.
+    """
     logger.info(msg)
-
-
-def warning_(msg):
-    """Log a warning message."""
-    logger.warning(msg)
-
-
-def error_(msg):
-    """Log an error message."""
-    logger.error(msg)
 
 
 # ======================================================================
@@ -205,6 +235,16 @@ class OMNICReader:
     # Initialization and reading
     # ======================================================================================
     def __init__(self, source, **kwargs):
+        """
+        Initialize the OMNICReader with a data source.
+
+        Parameters
+        ----------
+        source : str, Path, bytes
+            The data source to read.
+        **kwargs : dict
+            Additional keyword arguments for reading.
+        """
         # Check the source
         source, suffix = self._check_source(source, **kwargs)
 
@@ -216,7 +256,14 @@ class OMNICReader:
 
     @property
     def history(self):
-        """Describes the history of actions made on this class (List of strings)."""
+        """
+        Get the history of actions made on this class.
+
+        Returns
+        -------
+        list of str
+            List of timestamped history entries.
+        """
         history = []
         for date, value in self._history:
             date = date.astimezone(self._timezone).isoformat(
@@ -229,6 +276,14 @@ class OMNICReader:
 
     @history.setter
     def history(self, value):
+        """
+        Add an entry to the history.
+
+        Parameters
+        ----------
+        value : str or list
+            History entry to add or list of entries to replace current history.
+        """
         if value is None:
             return
         if isinstance(value, list):
@@ -244,11 +299,25 @@ class OMNICReader:
     # Private methods
     # ======================================================================================
     def __str__(self):
-        """Return a string representation of the object."""
+        """
+        Return a string representation of the object.
+
+        Returns
+        -------
+        str
+            String representation.
+        """
         return f"OMNICReader: {self.filename.name} {self.data.shape}"
 
     def __repr__(self):
-        """Return a string representation of the object."""
+        """
+        Return a string representation of the object.
+
+        Returns
+        -------
+        str
+            String representation for developers.
+        """
         return f"OMNICReader({self.filename.name}, {self.data.shape})"
 
     def _read_spg(self, source, **kwargs):
@@ -976,6 +1045,26 @@ class OMNICReader:
         self.history[-1] = "Imported from sdr file(s)"
 
     def _check_source(self, source, **kwargs):
+        """
+        Check and validate the source type and suffix.
+
+        Parameters
+        ----------
+        source : str, Path, bytes
+            The data source to check.
+        **kwargs : dict
+            Additional keyword arguments.
+
+        Returns
+        -------
+        tuple
+            Processed source and validated suffix.
+
+        Raises
+        ------
+        OMNICReaderError
+            If the source or suffix is invalid.
+        """
         # Check the source type and validate the suffix if necessary
         if is_url(source):
             suffix = kwargs.get("suffix", "." + source.split(".")[-1].lower())
@@ -1023,8 +1112,23 @@ class OMNICReader:
         return source, suffix
 
     def _openfid(self, source, mode="rb", **kwargs):
-        # Return a file ID and the kwargs
+        """
+        Open a file-like object from various source types.
 
+        Parameters
+        ----------
+        source : str, Path, bytes
+            The data source to open.
+        mode : str, optional
+            The file opening mode, default is 'rb'.
+        **kwargs : dict
+            Additional keyword arguments.
+
+        Returns
+        -------
+        file-like object
+            Opened file object.
+        """
         # default encoding
         encoding = "utf-8"
 

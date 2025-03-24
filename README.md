@@ -1,6 +1,6 @@
 # SpectroChemPy OMNIC Reader
 
-A standalone reader or a plugin for SpectroChemPy that enables
+A standalone reader (and soon a plugin for SpectroChemPy) that enables
 reading Thermo Scientific™ OMNIC™ spectroscopy files (*.spa,*.spg, *.srs) and Surface Optics Corp. Files (*.hdr, *.sdr,*.ddr)
 
 ## Installation
