@@ -34,3 +34,6 @@ def download_full_testdata_directory(datadir, force=False):
 
     # write the "__downloaded__" file to avoid this process to run several file.
     downloaded.touch(exist_ok=True)
+
+
+download_full_testdata_directory(Path.home() / ".spectrochempy" / "testdata")
