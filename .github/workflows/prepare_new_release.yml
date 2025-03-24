@@ -1,0 +1,78 @@
+name: Prepare a new release
+
+# This workflow is adapted from
+# https://github.com/thomaseizinger/github-action-gitflow-release-workflow/blob/dev/.github/workflows/draft-new-release.yml
+
+on:
+  workflow_dispatch:
+    inputs:
+      versionString:
+        description: "The version we want to release (e.g. 0.4.2)"
+        required: true
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  Prepare_new_release:
+    name: "Prepare a new release"
+    runs-on: ubuntu-latest
+    #if: github.repository == 'spectrochempy/spectrochempy'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install dependencies
+        run: |
+          python3 -m pip install --upgrade pip
+          python3 -m pip install json5 pyyaml
+          python3 -m pip install "cffconvert @ git+https://github.com/citation-file-format/cffconvert@b6045d7"
+          python3 -m pip install setuptools_scm
+
+      - name: Create release branch
+        run: git checkout -b release/${{ github.event.inputs.versionString }}
+
+      - name: Initialize mandatory git config
+        run: |
+          git config user.email "github-actions@users.noreply.github.com"
+          git config user.name "GitHub Actions"
+
+      - name: Update version in release notes, zenodo.json and CITATION.cff
+        run: |
+          python .github/workflows/scripts/update_version_and_release_notes.py ${{ github.event.inputs.versionString }}
+
+      - name: Commit tracked files
+        id: make-commit
+        run: |
+          git add -A
+          git commit --no-verify --message "Prepare release ${{ github.event.inputs.versionString }}"
+          echo "commit=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
+
+      - name: Push new branch
+        run: git push origin release/${{ github.event.inputs.versionString }}
+
+      - name: Create pull request into master
+        uses: thomaseizinger/create-pull-request@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          head: release/${{ github.event.inputs.versionString }}
+          base: master
+          reviewers: ${{ github.actor }}
+          title: Release version ${{ github.event.inputs.versionString }}
+          body: |
+            Hi @${{ github.actor }}!
+
+            This PR was created in response to a manual trigger of the release workflow
+            here:
+            https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}.
+
+            I've updated the docs/whatsnew/*rst files, CITATION.cff, zenodo.json plus eventual
+            changes on the requirements/environment files:
+            ${{ steps.make-commit.outputs.commit }}.
+            Merging this PR should be followed by the creation of the corresponding
+            draft release.
+            Publishing this release will trigger publishing on pypi, anaconda and zenodo.

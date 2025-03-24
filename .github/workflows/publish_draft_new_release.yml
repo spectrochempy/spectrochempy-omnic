@@ -1,0 +1,40 @@
+name: "Publish a draft new release"
+
+on:
+  pull_request:
+    branches:
+      - master
+    types:
+      - closed
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  release:
+    name: Publish new release
+    runs-on: ubuntu-latest
+    if: |
+      github.event.pull_request.merged == true
+      && startsWith(github.event.pull_request.head.ref, 'release/')
+    # only merged pull requests from a release branch must trigger this job
+    # to trigger this only from spectrochempy master add this : && github.repository == 'spectrochempy/spectrochempy'
+
+    steps:
+      - name: Extract version from branch name (for release branches)
+        if: startsWith(github.event.pull_request.head.ref, 'release/')
+        run: |
+          BRANCH_NAME="${{ github.event.pull_request.head.ref }}"
+          VERSION=${BRANCH_NAME#release/}
+          echo "RELEASE_VERSION=$VERSION" >> $GITHUB_ENV
+
+      - name: Create Release
+        uses: thomaseizinger/create-release@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          target_commitish: ${{ github.event.pull_request.merge_commit_sha }}
+          tag_name: ${{ env.RELEASE_VERSION }}
+          name: SpectroChemPy v.${{ env.RELEASE_VERSION }}
+          draft: true
+          prerelease: false

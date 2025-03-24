@@ -35,7 +35,11 @@ requires-python = ">=3.10"
 [project.optional-dependencies]
 build = ["setuptools", "setuptools_scm", "toml", "jinja2", "anaconda-client"]
 dev = ["spectrochempy[dev]"]
-
+test = [
+  "pytest",
+  "pytest-doctestplus",
+  "pytest-ruff",
+]
 [project.urls]
 issues = "https://github.com/spectrochempy/spectrochempy-omnic/issues"
 repository = "https://github.com/spectrochempy/spectrochempy-omnic"
@@ -55,7 +59,7 @@ local_scheme = "dirty-tag"
 
 [tool.ruff]
 line-length = 88
-target-version = "py312"
+target-version = "py310"
 
 [tool.ruff.lint]
 # Enable specific rules
@@ -99,13 +103,14 @@ select = [
   "TID252", # absolute imports
 ]
 
-exclude = ["~*"] # Exclude files
-
 [tool.ruff.format]
 indent-style = "space"
 line-ending = "auto"
 quote-style = "double"
 skip-magic-trailing-comma = false
+
+[tool.ruff.lint.isort]
+force-single-line = true
 
 [tool.pytest.ini_options]
 addopts = ["--ignore=~*", "--doctest-plus", "-p no:warnings"]
