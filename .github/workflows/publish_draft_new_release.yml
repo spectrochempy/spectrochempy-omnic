@@ -3,7 +3,7 @@ name: "Publish a draft new release"
 on:
   pull_request:
     branches:
-      - master
+      - main
     types:
       - closed
 

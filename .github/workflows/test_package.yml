@@ -11,7 +11,7 @@ name: Tests
 on:
   push:
     branches:
-      - master
+      - main
       - develop
       - feature/*
 
