@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
     inputs:
       versionString:
-        description: "The version we want to release (e.g. 0.4.2)"
+        description: "The version we want to release (e.g. 0.1.0)"
         required: true
 
 permissions:
@@ -38,12 +38,12 @@ jobs:
           git config user.email "github-actions@users.noreply.github.com"
           git config user.name "GitHub Actions"
 
-      - name: Commit tracked files
-        id: make-commit
-        run: |
-          git add -A
-          git commit --no-verify --message "Prepare release ${{ github.event.inputs.versionString }}"
-          echo "commit=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
+      # - name: Commit tracked files
+      #   id: make-commit
+      #   run: |
+      #     git add -A
+      #     git commit --no-verify --message "Prepare release ${{ github.event.inputs.versionString }}"
+      #     echo "commit=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
 
       - name: Push new branch
         run: git push origin release/${{ github.event.inputs.versionString }}
