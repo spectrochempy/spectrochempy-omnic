@@ -223,7 +223,7 @@ class OMNICReader:
                 sep=" ",
                 timespec="seconds",
             )
-            value = value[0].capitalize() + value[1:]
+            value = str(value).capitalize()
             history.append(f"{date}> {value}")
         return history
 
