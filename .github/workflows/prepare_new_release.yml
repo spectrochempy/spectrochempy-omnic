@@ -40,8 +40,8 @@ jobs:
 
       - name: Generate version file
         run: |
-          # Determine the package directory (adjust if needed)
-          PACKAGE_DIR="spectrochempy_omnic"
+          # Determine the package directory
+          PACKAGE_DIR="src/spectrochempy_omnic"
 
           # Create __version__.py file with setuptools_scm
           python3 -c "from setuptools_scm import get_version; version='${{ github.event.inputs.versionString }}'; open('${PACKAGE_DIR}/__version__.py', 'w').write(f'__version__ = \"{version}\"\n')"
