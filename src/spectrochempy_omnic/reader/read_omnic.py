@@ -196,7 +196,7 @@ class OMNICReader:
         Default value is None. When set to 'sample' returns the sample interferogram
         of the spa file if present or None if absent. When set to 'background' returns
         the background interferogram of the spa file if present or None if absent.
-    bg : bool, optional
+    background : bool, optional
         Apply only to .srs files.
         Default value is False. When set to 'True' returns the series background
 
@@ -1080,15 +1080,15 @@ class OMNICReader:
                         f"Invalid type for path: {type(source)}. Expected str or Pathlib object"
                     ) from e
 
-            # Check if source is a valid file path
-            if not source.exists():
-                raise OMNICReaderError(f"File not found: {source}")
-
             # Check if the file has a valid suffix
             if not source.suffix and "suffix" not in kwargs:
                 raise OMNICReaderError(
                     f"File has no suffix and suffix is not provided in kwargs. Expected one of {self.suffix}"
                 )
+
+            # Check if source is a valid file path
+            if not source.exists():
+                raise OMNICReaderError(f"File not found: {source}")
 
             suffix = source.suffix.lower() if source.suffix else kwargs["suffix"]
             if suffix not in self.suffix:
