@@ -48,12 +48,12 @@ jobs:
       - name: Push new branch
         run: git push origin release/${{ github.event.inputs.versionString }}
 
-      - name: Create pull request into master
+      - name: Create pull request into main
         uses: thomaseizinger/create-pull-request@master
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           head: release/${{ github.event.inputs.versionString }}
-          base: master
+          base: main
           reviewers: ${{ github.actor }}
           title: Release version ${{ github.event.inputs.versionString }}
           body: |
