@@ -5,9 +5,7 @@
 # ======================================================================================
 # ruff: noqa: S101
 """
-Extend NDDataset with the import method for OMNIC generated data files.
-
-This module provides functions to read OMNIC generated data files.
+This module provide a class `OMNICReader` to read OMNIC generated data files.
 """
 
 __all__ = ["OMNICReader"]
