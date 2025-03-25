@@ -1,11 +1,13 @@
 from pluggy import HookimplMarker
-from spectrochempy.plugins.pluginmanager import Plugin
+from spectrochempy.plugins.readers.readerplugin import ReaderPlugin
+
+from spectrochempy_omnic.reader.read_omnic import OMNICReader
 
 hookimpl = HookimplMarker("spectrochempy")
 
 
 # generic reader for Omnic files
-class OmnicReaderPlugin(Plugin):
+class OMNICReaderPlugin(ReaderPlugin):
     """Reader for Omnic files."""
 
     # Hooks implementation
@@ -20,18 +22,9 @@ class OmnicReaderPlugin(Plugin):
         }
 
     @hookimpl
-    def can_read(self, files: dict) -> bool:
-        return all(f in self.reader_extensions for f in files)
-
-    @hookimpl
-    def read_file(self, files: dict, **kwargs) -> object:
-        print(files)  #  # noqa: T201
-        return files
-
-    # Readeer properties
-    # ------------------
-    @property
-    def reader_extensions(self) -> list:
-        """Return list of file extensions this reader can handle."""
-        finfo = self.get_filetype_info()
-        return ["." + ext for ext in finfo.get("extensions", [])]
+    def read_file(self, files: list, suffix: str, **kwargs) -> object:
+        nds = []
+        for file in files:
+            nd = OMNICReader(file, **kwargs)
+            nds.append(nd)
+        return nds

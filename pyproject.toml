@@ -46,7 +46,7 @@ issues = "https://github.com/spectrochempy/spectrochempy-omnic/issues"
 repository = "https://github.com/spectrochempy/spectrochempy-omnic"
 
 [project.entry-points."spectrochempy.readers"]
-spc = "spectrochempy_omnic.plugin.omnicreaderplugin:OPlugin"
+omnic = "spectrochempy_omnic.plugin.omnicreaderplugin:OMNICReaderPlugin"
 
 [tool.setuptools]
 include-package-data = true
