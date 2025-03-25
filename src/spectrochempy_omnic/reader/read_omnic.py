@@ -4,9 +4,7 @@
 # See full LICENSE agreement in the root directory.
 # ======================================================================================
 # ruff: noqa: S101
-"""
-This module provide a class `OMNICReader` to read OMNIC generated data files.
-"""
+"""Module providing a class `OMNICReader` to read OMNIC generated data files."""
 
 __all__ = ["OMNICReader"]
 
