@@ -13,6 +13,7 @@ import logging
 import re
 import struct
 import sys
+import warnings
 from datetime import datetime
 from datetime import timedelta
 from pathlib import Path
@@ -185,17 +186,34 @@ class OMNICReader:
     directory : `~pathlib.Path` object objects, optional
         From where to read the files. If not provided or the given path is relative,
         the current working directory is used.
+    protocol : `str`, optional
+        Protocol parameters is required to read bytes contents as the file type cannot be determined automatically.
+        Protocol can be given as e.g ".spg" or "spg".
     suffix : `str`, optional
-        The suffix is required to read bytes contents as the file type cannod be determined automatically.
+        File suffix to read. If not provided, the suffix is determined from the file name.
+        (this is equivalent to the protocol parameter). Suffix can be given as e.g ".spg" or "spg".
     interferogram : str, optional
         Apply only to .spa, .hdr, .ddr or .sdr files.
         Default value is None. When set to 'sample' returns the sample interferogram
         of the spa file if present or None if absent. When set to 'background' returns
         the background interferogram of the spa file if present or None if absent.
+
+        .. versionadded:: 0.9.0
+
+    return_ifg : str, optional
+        Alias of interferogram.
+
+        .. deprecated:: 0.9.0
+            Use `interferogram` instead.
+
     background : bool, optional
         Apply only to .srs files.
         Default value is False. When set to 'True' returns the series background
+    return_bg : bool, optional
+        Alias of background.
 
+        .. deprecated:: 0.9.0
+            Use `background` instead.
     """
 
     suffix = [".spg", ".spa", ".srs", ".ddr", ".hdr", ".sdr"]
@@ -208,7 +226,8 @@ class OMNICReader:
     title = None
     name = None
     filename = None
-    omnic_name = None
+    origin = ""
+    original_name = None
     x = None
     x_title = None
     x_units = None
@@ -317,7 +336,7 @@ class OMNICReader:
         return f"OMNICReader({self.filename.name}, {self.data.shape})"
 
     def _read_spg(self, source, **kwargs):
-        fid = self._openfid(source, **kwargs)
+        fid, filename = self._openfid(source, **kwargs)
 
         # Read name:
         # The name starts at position hex 1e = decimal 30. Its max length
@@ -494,16 +513,17 @@ class OMNICReader:
         self.data = data
         self.units = units[0]
         self.title = titles[0]
-        self.name = source.stem if isinstance(source, Path) else Path(spg_name).stem
-        self.filename = source if isinstance(source, Path) else Path(spg_name)
-        self.omnic_name = spg_name
+        self.name = Path(filename).stem if filename else Path(spg_name).stem
+        self.filename = Path(filename) if filename else Path(spg_name)
+        self.origin = "omnic"
+        self.original_name = spg_name
 
         # Now get coordinates
         self.x = np.linspace(firstx[0], lastx[0], nx[0])
         self.x_title = xtitles[0]
         self.x_units = xunits[0]
 
-        self.y = np.array(timestamps) - min(timestamps)
+        self.y = np.array(timestamps)  # - min(timestamps)
         self.y_timestamp = min(timestamps)
         self.y_title = "acquisition timestamp (GMT)"
         self.y_units = "s"
@@ -513,9 +533,14 @@ class OMNICReader:
         self.history = f"Imported from spg file {self.filename.name}."
 
     def _read_spa(self, source, **kwargs):
-        fid = self._openfid(source, **kwargs)
-
-        interferogram = kwargs.get("interferogram")
+        fid, filename = self._openfid(source, **kwargs)
+        if "return_ifg" in kwargs:
+            warnings.warn(
+                "The `return_ifg` parameter is deprecated, use `interferogram` instead.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+        interferogram = kwargs.get("interferogram") or kwargs.get("return_ifg")
 
         # Read name:
         # The name  starts at position hex 1e = decimal 30. Its max length
@@ -631,18 +656,20 @@ class OMNICReader:
         else:
             title = "acquisition timestamp (GMT)"  # no ambiguity here
 
-        self.y = np.array([0], dtype="float32")
+        self.y = np.array([timestamp], dtype="float32")
         self.y_timestamp = timestamp
         self.y_title = title
         self.y_units = "s"
-        self.y_labels = ([acquisitiondate], [source])
+        self.y_labels = ([acquisitiondate], [spa_name])
 
         # useful when a part of the spectrum/ifg has been blanked:
         self.mask = np.isnan(self.data)
 
         self.interferogram = interferogram is not None
-        self.filename = source if isinstance(source, Path) else Path(spa_name)
-        self.omnic_name = spa_name
+        self.name = Path(filename).stem if filename else Path(spa_name).stem
+        self.filename = Path(filename) if filename else Path(spa_name)
+        self.origin = "omnic"
+        self.original_name = spa_name
 
         if interferogram is None:
             self.interferogram = False
@@ -672,7 +699,7 @@ class OMNICReader:
             self.x_title = "data points"
             self.x_units = None
 
-        self.name = self.omnic_name  # to be consistent with omnic behaviour
+        self.name = self.original_name  # to be consistent with omnic behaviour
 
         self.collection_length = info["collection_length"] / 100
         self.collection_length_units = "s"
@@ -696,9 +723,14 @@ class OMNICReader:
         self.date = utcnow()
 
     def _read_srs(self, source, **kwargs):
-        fid = self._openfid(source, **kwargs)
-
-        background = kwargs.get("background", False)
+        fid, filename = self._openfid(source, **kwargs)
+        if "return_bg" in kwargs:
+            warnings.warn(
+                "The `return_bg` parameter is deprecated, use `background` instead.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+        background = kwargs.get("background", False) or kwargs.get("return_bg", False)
 
         # read the file and determine whether it is a rapidscan or a high speed real time
         is_rapidscan, is_highspeed, is_tg = False, False, False
@@ -990,7 +1022,9 @@ class OMNICReader:
 
         self.units = info["units"]
         self.title = info["title"]
-        self.filename = source if isinstance(source, Path) else "unknown"
+        self.name = Path(filename).stem if filename else "unamed"
+        self.filename = Path(filename) if filename else "unknown"
+        self.origin = "omnic"
 
         # now add coordinates
         self.x = np.linspace(info["firstx"], info["lastx"], int(info["nx"]))
@@ -1009,7 +1043,7 @@ class OMNICReader:
 
         else:
             self.y = np.array([0], dtype="float32")
-
+        self.y_timestamp = min(self.y)
         if "history" in locals():
             self.history = (
                 "Omnic 'DATA PROCESSING HISTORY' :\n"
@@ -1040,6 +1074,14 @@ class OMNICReader:
         self._read_spa(*args, **kwargs)
         self.history[-1] = "Imported from sdr file(s)"
 
+    def _get_suffix_from_kwargs(self, **kwargs):
+        suffix = kwargs.get("protocol") or kwargs.get("suffix")
+        if suffix is None:
+            return None
+        if not suffix.startswith("."):
+            suffix = "." + suffix
+        return suffix.lower()
+
     def _check_source(self, source, **kwargs):
         """
         Check and validate the source type and suffix.
@@ -1062,11 +1104,13 @@ class OMNICReader:
             If the source or suffix is invalid.
         """
         # Check the source type and validate the suffix if necessary
-        if is_url(source):
-            suffix = kwargs.get("suffix", "." + source.split(".")[-1].lower())
-            return source, suffix
+        kw_suffix = self._get_suffix_from_kwargs(**kwargs)
 
-        if not isinstance(source, bytes):
+        if is_url(source):
+            suffix = Path(source).suffix.lower()
+            return source, kw_suffix if suffix not in self.suffix else suffix
+
+        if not isinstance(source, bytes | dict):
             # Check if source is a string or Path object
             if not isinstance(source, Path):
                 try:
@@ -1077,33 +1121,41 @@ class OMNICReader:
                     ) from e
 
             # Check if the file has a valid suffix
-            if not source.suffix and "suffix" not in kwargs:
+            if not source.suffix and kw_suffix is None:
                 raise OMNICReaderError(
-                    f"File has no suffix and suffix is not provided in kwargs. Expected one of {self.suffix}"
+                    f"File has no suffix and suffix (or protocol) parameter is not provided in kwargs. Expected one of {self.suffix}"
                 )
 
             # Check if source is a valid file path
             if not source.exists():
                 raise OMNICReaderError(f"File not found: {source}")
 
-            suffix = source.suffix.lower() if source.suffix else kwargs["suffix"]
+            suffix = source.suffix.lower() if source.suffix else kw_suffix
             if suffix not in self.suffix:
                 raise OMNICReaderError(
                     f"Invalid suffix: {suffix}. Expected one of {self.suffix}"
                 )
 
-        else:
+        else:  # source is a content
             # Check if suffix is provided
-            if "suffix" not in kwargs:
+            suffix = kw_suffix
+            if isinstance(source, dict) and suffix is None:
+                # dict must content a single element
+                if len(source) != 1:
+                    raise OMNICReaderError(
+                        "When using dict content, the dict must contain a single element. (multiple content reading not yet supported)"
+                    )
+                suffix = Path(list(source.keys())[0]).suffix.lower()
+            if suffix is None:
                 raise OMNICReaderError(
-                    "When using bytes content, the suffix must be provided in kwargs."
+                    "When using bytes content, the suffix must be provided as a filename suffix or "
+                    "in kwargs (using protocol or suffix parameter)."
                 )
             # Validate the provided suffix
-            if kwargs["suffix"] not in self.suffix:
+            if suffix not in self.suffix:
                 raise OMNICReaderError(
-                    f"Invalid suffix: {kwargs['suffix']}. Expected one of {self.suffix}"
+                    f"Invalid suffix: {suffix}. Expected one of {self.suffix}"
                 )
-            suffix = kwargs["suffix"]
 
         return source, suffix
 
@@ -1113,7 +1165,7 @@ class OMNICReader:
 
         Parameters
         ----------
-        source : str, Path, bytes
+        source : str, Path, bytes, dict
             The data source to open.
         mode : str, optional
             The file opening mode, default is 'rb'.
@@ -1137,13 +1189,18 @@ class OMNICReader:
             r.raise_for_status()
             content = r.content
             encoding = r.encoding
+            filename = Path(source).name
 
         elif isinstance(source, bytes):
             # use BytesIO to read the bytes content
             content = source
 
+        elif isinstance(source, dict):
+            content = list(source.values())[0]
+            filename = list(source.keys())[0]
+
         else:
-            # transform filename to a Path object is not yet the case
+            # transform filename to a Path object if not yet the case
             filename = Path(source)
 
         # Create the file ID
@@ -1157,7 +1214,7 @@ class OMNICReader:
         else:
             fid = open(filename, mode=mode)  # noqa: SIM115
 
-        return fid
+        return fid, filename
 
     def _read_header(self, fid, pos):
         r"""
