@@ -7,40 +7,19 @@
 
 import pytest
 from pathlib import Path
-import io
-import sys
-from unittest.mock import patch, mock_open
 
-from spectrochempy_omnic import OMNICReader, OMNICReaderError, OMNICReaderWarning
+from spectrochempy_omnic import OMNICReader, OMNICReaderError
 
 
-IRDATA = Path(__file__).parent / "data"
-
-
-@pytest.fixture
-def spg_file_path():
-    """Fixture for a standard SPG file path."""
-    return IRDATA / "nh4y-activation.spg"
-
-
-@pytest.fixture
-def spa_file_path():
-    """Fixture for a standard SPA file path."""
-    return IRDATA / "subdir" / "7_CZ0-100_Pd_101.SPA"
-
-
-@pytest.fixture
-def spa_bytes_content(spa_file_path):
-    """Fixture providing the binary content of an SPA file."""
-    with open(spa_file_path, "rb") as fil:
-        return fil.read()
+IRDATA = Path(__file__).parent.parent / "data"
 
 
 class TestOMNICReaderBasics:
     """Tests for basic functionality of OMNICReader."""
 
-    def test_read_spg_file(self, spg_file_path):
+    def test_read_spg_file(self):
         """Test reading an SPG file and verify basic properties."""
+        spg_file_path = IRDATA / "nh4y-activation.spg"
         nd1 = OMNICReader(spg_file_path)
 
         # Check data dimensions

@@ -22,9 +22,19 @@ class OMNICReaderPlugin(ReaderPlugin):
         }
 
     @hookimpl
-    def read_file(self, files: list, suffix: str, **kwargs) -> object:
+    def read_file(self, filenames: list, protocol: str = None, **kwargs) -> object:
         nds = []
-        for file in files:
-            nd = OMNICReader(file, **kwargs)
-            nds.append(nd)
-        return nds
+        for filename in filenames:
+            nd = OMNICReader(filename, protocol=protocol, **kwargs)
+            if nd.data is not None:
+                nds.append(nd)
+        return nds if len(nds) > 0 else None
+
+    @hookimpl
+    def install_testdata(self, datadir):
+        """Install test data in the specified directory."""
+        # from spectrochempy import error_  # here to avoid circular imports
+        from spectrochempy_omnic.plugin.utils import download_irdata_directory
+
+        # Download the IR data directory
+        download_irdata_directory(datadir)
