@@ -1012,7 +1012,7 @@ class OMNICReader:
 
         self.units = info["units"]
         self.title = info["title"]
-        self.name = Path(filename).stem if filename else "unamed"
+        self.name = Path(filename).stem if filename else "unnamed"
         self.filename = Path(filename) if filename else "unknown"
         self.origin = "omnic"
 
