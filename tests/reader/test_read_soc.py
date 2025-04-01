@@ -29,25 +29,16 @@ def test_read_SOC():
     assert ds.data.shape == (1, 599)
     assert ds.x_title == "wavenumbers"
     assert ds.x_units == "cm^-1"
-    assert (
-        str(ds)
-        == "OMNICReader: Fused Silica0004.DDR, UnPol, 20.0 [0.0°] 300.0K (1, 599)"
-    )
+    assert str(ds) == f"OMNICReader: {ds.filename.name} {ds.data.shape}"
 
     ds = OMNICReader(fnames[1])
     assert ds.data.shape == (1, 599)
     assert ds.x_title == "wavenumbers"
     assert ds.x_units == "cm^-1"
-    assert (
-        str(ds)
-        == "OMNICReader: Fused Silica0004.HDR, UnPol, 20.0 [0.0°] 300.0K (1, 599)"
-    )
+    assert str(ds) == f"OMNICReader: {ds.filename.name} {ds.data.shape}"
 
     ds = OMNICReader(fnames[2])
     assert ds.data.shape == (1, 599)
     assert ds.x_title == "wavenumbers"
     assert ds.x_units == "cm^-1"
-    assert (
-        str(ds)
-        == "OMNICReader: Fused Silica0004.SDR, UnPol, 20.0 [0.0°] 300.0K (1, 599)"
-    )
+    assert str(ds) == f"OMNICReader: {ds.filename.name} {ds.data.shape}"

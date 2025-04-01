@@ -103,6 +103,7 @@ select = [
   "W", # pycodestyle warnings  # "PERF", # perflint
   "PLC", # pylint conventions
   "TID252", # absolute imports
+  "NPY201", # numpy
 ]
 
 [tool.ruff.format]
