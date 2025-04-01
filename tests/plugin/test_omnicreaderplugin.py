@@ -24,7 +24,7 @@ class TestOMNICReaderPlugin:
     def test_read_file_single(self, monkeypatch):
         """Test reading a single file."""
         # Setup mock
-        mock_instance = object()
+        mock_instance = type("MockOMNICInstance", (), {"data": "mock_data"})()
 
         # Create a mock OMNICReader class
         class MockOMNICReader:
@@ -61,6 +61,7 @@ class TestOMNICReaderPlugin:
             def __init__(self, file, **kwargs):
                 self.file = file
                 self.kwargs = kwargs
+                self.data = "mock_data"  # Add data attribute
                 call_args.append((file, kwargs))
                 mock_instances.append(self)
 

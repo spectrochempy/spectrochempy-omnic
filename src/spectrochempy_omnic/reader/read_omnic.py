@@ -188,7 +188,7 @@ class OMNICReader:
         the current working directory is used.
     protocol : `str`, optional
         Protocol parameters is required to read bytes contents as the file type cannot be determined automatically.
-        Protocol can be given as e.g ".spg" or "spg".
+        Protocol can be given as e.g ".spg" or "spg" ((Backward compatibility with original reader version in spectrochempy).
     suffix : `str`, optional
         File suffix to read. If not provided, the suffix is determined from the file name.
         (this is equivalent to the protocol parameter). Suffix can be given as e.g ".spg" or "spg".
@@ -197,23 +197,13 @@ class OMNICReader:
         Default value is None. When set to 'sample' returns the sample interferogram
         of the spa file if present or None if absent. When set to 'background' returns
         the background interferogram of the spa file if present or None if absent.
-
-        .. versionadded:: 0.9.0
-
     return_ifg : str, optional
-        Alias of interferogram.
-
-        .. deprecated:: 0.9.0
-            Use `interferogram` instead.
-
+        Alias of interferogram (Backward compatibility with original reader version in spectrochempy)
     background : bool, optional
         Apply only to .srs files.
         Default value is False. When set to 'True' returns the series background
     return_bg : bool, optional
-        Alias of background.
-
-        .. deprecated:: 0.9.0
-            Use `background` instead.
+        Alias of background (Backward compatibility with original reader version in spectrochempy).
     """
 
     suffix = [".spg", ".spa", ".srs", ".ddr", ".hdr", ".sdr"]

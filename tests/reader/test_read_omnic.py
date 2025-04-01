@@ -57,7 +57,10 @@ class TestOMNICReaderBasics:
         assert nd2.x.size == nd2.data.shape[1]
 
         # Test error when suffix not provided with binary content
-        with pytest.raises(OMNICReaderError, match="suffix must be provided in kwargs"):
+        with pytest.raises(
+            OMNICReaderError,
+            match="When using bytes content, the suffix must be provided.*",
+        ):
             OMNICReader(content)
 
 
