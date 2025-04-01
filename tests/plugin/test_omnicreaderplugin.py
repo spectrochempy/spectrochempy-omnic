@@ -8,9 +8,12 @@
 # Skip tests until main spectrochempy plugin manager is completed
 import pytest
 
-pytestmark = pytest.mark.skip(reason="SpectrochemPy plugin manager not yet finished")
-
-from spectrochempy_omnic.plugin.omnicreaderplugin import OMNICReaderPlugin
+try:
+    from spectrochempy_omnic.plugin.omnicreaderplugin import OMNICReaderPlugin
+except ImportError:
+    pytestmark = pytest.mark.skip(
+        reason="SpectrochemPy plugin manager not yet finished"
+    )
 
 
 class TestOMNICReaderPlugin:
