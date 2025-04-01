@@ -5,6 +5,11 @@
 # ======================================================================================
 # ruff: noqa: S101
 
+# Skip tests until main spectrochempy plugin manager is completed
+import pytest
+
+pytestmark = pytest.mark.skip(reason="SpectrochemPy plugin manager not yet finished")
+
 from spectrochempy_omnic.plugin.omnicreaderplugin import OMNICReaderPlugin
 
 
