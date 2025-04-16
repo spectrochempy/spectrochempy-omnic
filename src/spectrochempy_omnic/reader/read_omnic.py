@@ -204,6 +204,12 @@ class OMNICReader:
         Default value is False. When set to 'True' returns the series background
     return_bg : bool, optional
         Alias of background (Backward compatibility with original reader version in spectrochempy).
+    reverse_x : bool, optional
+        Apply only to .srs files.
+        Specifies whether to reverse the x-axis (wavenumber) data. Default is False.
+        In most srs files, the absorbance/intensity data are recorded from high to low
+        wavenumbers. However, in some cases the data maybe stored in low to high order.
+        In such a case, 'reverse_x' should be set to 'True'.
     """
 
     suffix = [".spg", ".spa", ".srs", ".ddr", ".hdr", ".sdr"]
@@ -721,6 +727,7 @@ class OMNICReader:
                 stacklevel=2,
             )
         background = kwargs.get("background", False) or kwargs.get("return_bg", False)
+        reverse_x = kwargs.get("reverse_x", False)
 
         # read the file and determine whether it is a rapidscan or a high speed real time
         is_rapidscan, is_highspeed, is_tg = False, False, False
@@ -1003,7 +1010,7 @@ class OMNICReader:
                     return
 
         if not background:
-            self.data = data
+            self.data = data if not reverse_x else data[:, ::-1]
         else:
             self.data = np.expand_dims(data, axis=0)
 
