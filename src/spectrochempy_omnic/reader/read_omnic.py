@@ -410,7 +410,7 @@ class OMNICReader:
             fid.seek(position02[i] + 2)
             pos_header = fromfile(fid, dtype="uint32", count=1)
             # get infos
-            info = self._read_header(fid, pos_header)
+            info = self._read_header(fid, pos_header, is_first_spectrum=(i == 0))
             nx[i] = info["nx"]
             firstx[i] = info["firstx"]
             lastx[i] = info["lastx"]
@@ -1213,7 +1213,7 @@ class OMNICReader:
 
         return fid, filename
 
-    def _read_header(self, fid, pos):
+    def _read_header(self, fid, pos,is_first_spectrum=True):
         r"""
         Read spectrum/ifg/series header.
 
@@ -1224,6 +1224,9 @@ class OMNICReader:
 
         pos : int
             The position of the header (see Notes).
+
+        is_first_spectrum : bool, optional
+            Indicates if this is the first spectrum being read. Default is True.
 
         Returns
         -------
@@ -1354,7 +1357,8 @@ class OMNICReader:
         else:  # pragma: no cover
             out["units"] = None
             out["title"] = "intensity"
-            info_("The nature of data is not recognized, title set to 'Intensity'")
+            if is_first_spectrum:
+                info_("The nature of data is not recognized, title set to 'Intensity'")
 
         # firstx, lastx
         fid.seek(pos + 16)
