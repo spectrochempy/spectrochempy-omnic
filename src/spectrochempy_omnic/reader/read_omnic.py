@@ -1250,10 +1250,11 @@ class OMNICReader:
             - data units (UInt8): 12 bytes behind. So far, we have the following
             correspondence:
 
-                * `x\11` : absorbance
-                * `x\10` : transmittance (%)
                 * `x\0B` : reflectance (%)
                 * `x\0C` : Kubelka_Munk
+                * `x\0F` : single beam
+                * `x\11` : absorbance
+                * `x\10` : transmittance (%)
                 * `x\16` : Volts (interferogram)
                 * `x\1A` : photoacoustic
                 * `x\1F` : Raman intensity
@@ -1339,6 +1340,9 @@ class OMNICReader:
         elif key == 12:  # pragma: no cover
             out["units"] = None
             out["title"] = "log(1/R)"
+        elif key == 15:  # pragma: no cover
+            out["units"] = None
+            out["title"] = "single beam"
         elif key == 20:  # pragma: no cover
             out["units"] = "Kubelka_Munk"
             out["title"] = "Kubelka-Munk"
@@ -1358,7 +1362,7 @@ class OMNICReader:
             out["units"] = None
             out["title"] = "intensity"
             if is_first_spectrum:
-                info_("The nature of data is not recognized, title set to 'Intensity'")
+                info_(f"The nature of data is not recognized (key == {key}), title set to 'Intensity'")
 
         # firstx, lastx
         fid.seek(pos + 16)
